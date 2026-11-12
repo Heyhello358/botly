@@ -7,9 +7,11 @@ import {
   Server, 
   BarChart3, 
   Settings,
-  Hexagon
+  Hexagon,
+  ScrollText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -17,11 +19,18 @@ const navItems = [
   { to: '/commands', icon: Terminal, label: 'Commands' },
   { to: '/embeds', icon: MessageSquare, label: 'Embed Builder' },
   { to: '/servers', icon: Server, label: 'Servers' },
+  { to: '/logs', icon: ScrollText, label: 'Logs' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function Sidebar() {
+  const [version, setVersion] = useState('');
+
+  useEffect(() => {
+    window.botly?.getVersion?.().then(v => setVersion(v)).catch(() => {});
+  }, []);
+
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-60 flex-col border-r border-white/5 bg-[#0c0c0e]">
       {/* Logo */}
@@ -36,7 +45,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -65,7 +74,9 @@ export function Sidebar() {
       <div className="border-t border-white/5 p-4">
         <div className="rounded-lg bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/20 p-3">
           <p className="text-xs font-medium text-violet-300">Desktop Edition</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Data saved in AppData</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {version ? `v${version}` : 'Data saved in AppData'}
+          </p>
         </div>
       </div>
     </aside>

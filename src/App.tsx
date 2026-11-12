@@ -7,6 +7,7 @@ import EmbedBuilder from './pages/EmbedBuilder';
 import Servers from './pages/Servers';
 import Analytics from './pages/Analytics';
 import SettingsPage from './pages/Settings';
+import Logs from './pages/Logs';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/commands" element={<Commands />} />
             <Route path="/embeds" element={<EmbedBuilder />} />
             <Route path="/servers" element={<Servers />} />
+            <Route path="/logs" element={<Logs />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
