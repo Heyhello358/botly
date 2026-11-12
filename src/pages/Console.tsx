@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Server, Hash, Send, Loader2, Bot } from 'lucide-react';
+import { Hash, Send, Loader2, Bot } from 'lucide-react';
 import type { Bot as BotType, EmbedData } from '@/types';
 
 export default function Console() {
@@ -42,7 +42,7 @@ export default function Console() {
     setLoadingGuilds(true);
     setGuilds([]);
     setSelectedGuild('');
-    setChannels([]
+    setChannels([]);
     setSelectedChannel('');
     try {
       const data = await window.botly.getGuilds(selectedBot);
@@ -122,7 +122,6 @@ export default function Console() {
       </div>
 
       <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
-        {/* Sidebar - Bots & Servers & Channels */}
         <div className="col-span-4 glass rounded-xl flex flex-col overflow-hidden">
           <div className="p-3 border-b border-white/5">
             <label className="label text-xs">Bot</label>
@@ -188,7 +187,6 @@ export default function Console() {
           </div>
         </div>
 
-        {/* Main - Message composer */}
         <div className="col-span-8 glass rounded-xl flex flex-col overflow-hidden">
           <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2">
             <Hash className="h-4 w-4 text-muted-foreground" />
@@ -250,7 +248,7 @@ export default function Console() {
               className="btn-primary"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Send as Bot sp
+              Send as Bot
             </button>
           </div>
         </div>
