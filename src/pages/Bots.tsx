@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Bot, Power, Trash2, Loader2, Server, Users, X } from 'lucide-react';
+import { Plus, Bot, Power, Trash2, Loader2, Server, Users, X, ExternalLink, Copy, Check } from 'lucide-react';
 import { cn, statusColor, formatRelativeTime } from '@/lib/utils';
 import type { Bot as BotType } from '@/types';
 
@@ -11,6 +11,7 @@ export default function Bots() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     loadBots();
@@ -91,6 +92,18 @@ export default function Bots() {
     }
   }
 
+  function getInviteLink(bot: BotType) {
+    const clientId = bot.clientId || 'YOUR_CLIENT_ID';
+    return `https://discord.com/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands`;
+  }
+
+  function copyInvite(bot: BotType) {
+    const link = getInviteLink(bot);
+    navigator.clipboard.writeText(link);
+    setCopiedId(bot.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  }
+
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -168,32 +181,45 @@ export default function Bots() {
                 </p>
               )}
 
-              <div className="mt-auto pt-4 flex gap-2">
-                {bot.status === 'online' || bot.status === 'starting' ? (
+              <div className="mt-auto pt-4 flex flex-col gap-2">
+                <div className="flex gap-2">
+                  {bot.status === 'online' || bot.status === 'starting' ? (
+                    <button
+                      onClick={() => handleStop(bot.id)}
+                      disabled={actionLoading === bot.id}
+                      className="btn-secondary flex-1 text-xs"
+                    >
+                      {actionLoading === bot.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Power className="h-3.5 w-3.5" />}
+                      Stop
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleStart(bot.id)}
+                      disabled={actionLoading === bot.id}
+                      className="btn-primary flex-1 text-xs"
+                    >
+                      {actionLoading === bot.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Power className="h-3.5 w-3.5" />}
+                      Start
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleStop(bot.id)}
+                    onClick={() => handleDelete(bot.id, bot.name)}
                     disabled={actionLoading === bot.id}
-                    className="btn-secondary flex-1 text-xs"
+                    className="btn-danger px-3"
                   >
-                    {actionLoading === bot.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Power className="h-3.5 w-3.5" />}
-                    Stop
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
-                ) : (
-                  <button
-                    onClick={() => handleStart(bot.id)}
-                    disabled={actionLoading === bot.id}
-                    className="btn-primary flex-1 text-xs"
-                  >
-                    {actionLoading === bot.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Power className="h-3.5 w-3.5" />}
-                    Start
-                  </button>
-                )}
+                </div>
                 <button
-                  onClick={() => handleDelete(bot.id, bot.name)}
-                  disabled={actionLoading === bot.id}
-                  className="btn-danger px-3"
+                  onClick={() => copyInvite(bot)}
+                  className="btn-ghost text-xs w-full justify-center"
+                  title="Copy invite link"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  {copiedId === bot.id ? (
+                    <><Check className="h-3.5 w-3.5 text-emerald-400" /> Copied!</>
+                  ) : (
+                    <><ExternalLink className="h-3.5 w-3.5" /> Invite to Server</>
+                  )}
                 </button>
               </div>
             </div>
@@ -236,7 +262,7 @@ export default function Bots() {
                 </p>
               </div>
               <div>
-                <label className="label">Client ID (optional)</label>
+                <label className="label">Client ID (for invite links)</label>
                 <input
                   className="input mt-1.5 font-mono text-xs"
                   placeholder="Application / Client ID"
