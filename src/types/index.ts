@@ -73,7 +73,19 @@ declare global {
       setSettings: (settings: Settings) => Promise<boolean>;
       getActivity: () => Promise<ActivityItem[]>;
       getStats: () => Promise<Stats>;
+      getGuilds: (botId: string) => Promise<any[]>;
+      getChannels: (botId: string, guildId: string) => Promise<any[]>;
+      sendMessage: (payload: { botId: string; channelId: string; content?: string; embed?: EmbedData }) => Promise<any>;
+      checkForUpdates: () => Promise<{ success: boolean; version?: string; error?: string }>;
+      downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
+      installUpdate: () => void;
+      getVersion: () => Promise<string>;
       onBotStatusChanged: (callback: (data: { id: string; status: string; servers?: number; users?: number }) => void) => () => void;
+      onUpdateAvailable: (callback: (data: { version: string }) => void) => () => void;
+      onUpdateNotAvailable: (callback: () => void) => () => void;
+      onUpdateProgress: (callback: (data: { percent: number }) => void) => () => void;
+      onUpdateDownloaded: (callback: () => void) => () => void;
+      onUpdateError: (callback: (msg: string) => void) => () => void;
     };
   }
 }
