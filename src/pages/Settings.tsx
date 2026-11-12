@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, RefreshCw, Download, CheckCircle2 } from 'lucide-react';
 import type { Settings } from '@/types';
 
 export default function SettingsPage() {
@@ -12,18 +12,49 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // Update state
+  const [version, setVersion] = useState('...');
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'not-available' | 'error'>('idle');
+  const [updateInfo, setUpdateInfo] = useState<{ version?: string; percent?: number; error?: string }>({});
+
   useEffect(() => {
     async function load() {
       try {
         if (window.botly) {
           const s = await window.botly.getSettings();
           if (s) setSettings(s);
+          const v = await window.botly.getVersion();
+          setVersion(v);
         }
       } finally {
         setLoading(false);
       }
     }
     load();
+
+    // Listen for update events
+    const unsubs = [
+      window.botly?.onUpdateAvailable?.((info) => {
+        setUpdateStatus('available');
+        setUpdateInfo({ version: info.version });
+      }),
+      window.botly?.onUpdateNotAvailable?.(() => {
+        setUpdateStatus('not-available');
+      }),
+      window.botly?.onUpdateProgress?.((progress) => {
+        setUpdateStatus('downloading');
+        setUpdateInfo(prev => ({ ...prev, percent: progress.percent }));
+      }),
+      window.botly?.onUpdateDownloaded?.(() => {
+        setUpdateStatus('downloaded');
+      }),
+      window.botly?.onUpdateError?.((msg) => {
+        setUpdateStatus('error');
+        setUpdateInfo(prev => ({ ...prev, error: msg }));
+      }),
+    ];
+
+    return () => unsubs.forEach(u => u?.());
   }, []);
 
   async function handleSave() {
@@ -35,6 +66,31 @@ export default function SettingsPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleCheckUpdate() {
+    setUpdateStatus('checking');
+    setUpdateInfo({});
+    try {
+      const result = await window.botly.checkForUpdates();
+      if (!result.success) {
+        setUpdateStatus('error');
+        setUpdateInfo({ error: result.error || 'Failed to check' });
+      }
+      // Status will be updated by the event listeners
+    } catch (e: any) {
+      setUpdateStatus('error');
+      setUpdateInfo({ error: e.message });
+    }
+  }
+
+  async function handleDownload() {
+    setUpdateStatus('downloading');
+    await window.botly.downloadUpdate();
+  }
+
+  function handleInstall() {
+    window.botly.installUpdate();
   }
 
   if (loading) {
@@ -49,7 +105,69 @@ export default function SettingsPage() {
       </div>
 
       <div className="glass rounded-xl p-6 space-y-6">
+        {/* Updates Section */}
         <div>
+          <h2 className="font-medium mb-4">Updates</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Current version</p>
+              <p className="text-xs text-muted-foreground mt-0.5">v{version}</p>
+            </div>
+            <button
+              onClick={handleCheckUpdate}
+              disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
+              className="btn-secondary text-xs"
+            >
+              {updateStatus === 'checking' ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking...</>
+              ) : (
+                <><RefreshCw className="h-3.5 w-3.5" /> Check for Updates</>
+              )}
+            </button>
+          </div>
+
+          {updateStatus === 'available' && (
+            <div className="mt-4 rounded-lg bg-violet-500/10 border border-violet-500/20 p-4">
+              <p className="text-sm font-medium text-violet-300">Update available: v{updateInfo.version}</p>
+              <button onClick={handleDownload} className="btn-primary mt-3 text-xs">
+                <Download className="h-3.5 w-3.5" /> Download Update
+              </button>
+            </div>
+          )}
+
+          {updateStatus === 'downloading' && (
+            <div className="mt-4">
+              <p className="text-sm text-muted-foreground mb-2">Downloading... {Math.round(updateInfo.percent || 0)}%</p>
+              <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-violet-500 transition-all"
+                  style={{ width: `${updateInfo.percent || 0}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {updateStatus === 'downloaded' && (
+            <div className="mt-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-4">
+              <p className="text-sm font-medium text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" /> Update ready to install
+              </p>
+              <button onClick={handleInstall} className="btn-primary mt-3 text-xs">
+                Restart & Install
+              </button>
+            </div>
+          )}
+
+          {updateStatus === 'not-available' && (
+            <p className="mt-3 text-sm text-muted-foreground">You're on the latest version.</p>
+          )}
+
+          {updateStatus === 'error' && (
+            <p className="mt-3 text-sm text-red-400">{updateInfo.error || 'Something went wrong'}</p>
+          )}
+        </div>
+
+        <div className="border-t border-white/5 pt-6">
           <h2 className="font-medium mb-4">Appearance</h2>
           <div>
             <label className="label">Theme</label>
