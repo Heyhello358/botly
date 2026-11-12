@@ -33,11 +33,8 @@ jobs:
           name: Botly-Windows
           path: release/*.exe
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Publish Release (when tagged)
         if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: release/*.exe
-          generate_release_notes: true
+        run: npx electron-builder --win --publish always
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

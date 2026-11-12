@@ -1,6 +1,6 @@
 {
   "name": "botly",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Botly - Premium Discord Bot Management Dashboard",
   "main": "electron/main.js",
   "author": "Botly Team",
@@ -26,6 +26,13 @@
       "electron/**/*",
       "package.json"
     ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Heyhello358",
+        "repo": "botly"
+      }
+    ],
     "win": {
       "target": [
         {
@@ -39,7 +46,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Botly"
+      "shortcutName": "Botly",
+      "differentialPackage": true
     }
   },
   "dependencies": {
@@ -50,6 +58,7 @@
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.5.2",
     "electron-store": "^8.2.0",
+    "electron-updater": "^6.3.9",
     "discord.js": "^14.16.3",
     "uuid": "^10.0.0",
     "date-fns": "^3.6.0",
