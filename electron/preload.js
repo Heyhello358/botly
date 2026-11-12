@@ -1,11 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('botly', {
-  // Store
   get: (key) => ipcRenderer.invoke('store:get', key),
   set: (key, value) => ipcRenderer.invoke('store:set', key, value),
 
-  // Bots
   getBots: () => ipcRenderer.invoke('bots:getAll'),
   addBot: (data) => ipcRenderer.invoke('bots:add', data),
   updateBot: (id, updates) => ipcRenderer.invoke('bots:update', id, updates),
@@ -13,53 +11,53 @@ contextBridge.exposeInMainWorld('botly', {
   startBot: (id) => ipcRenderer.invoke('bots:start', id),
   stopBot: (id) => ipcRenderer.invoke('bots:stop', id),
 
-  // Commands
   getCommands: () => ipcRenderer.invoke('commands:getAll'),
   saveCommands: (commands) => ipcRenderer.invoke('commands:save', commands),
 
-  // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setSettings: (settings) => ipcRenderer.invoke('settings:set', settings),
 
-  // Activity & Stats
   getActivity: () => ipcRenderer.invoke('activity:get'),
   getStats: () => ipcRenderer.invoke('stats:get'),
 
-  // Updates
+  // Console
+  getGuilds: (botId) => ipcRenderer.invoke('console:getGuilds', botId),
+  getChannels: (botId, guildId) => ipcRenderer.invoke('console:getChannels', botId, guildId),
+  sendMessage: (payload) => ipcRenderer.invoke('console:sendMessage', payload),
+
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
   downloadUpdate: () => ipcRenderer.invoke('update:download'),
   installUpdate: () => ipcRenderer.invoke('update:install'),
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
 
-  // Events
-  onBotStatusChanged: (callback) => {
-    const handler = (_event, data) => callback(data);
-    ipcRenderer.on('bot:statusChanged', handler);
-    return () => ipcRenderer.removeListener('bot:statusChanged', handler);
+  onBotStatusChanged: (cb) => {
+    const h = (_, d) => cb(d);
+    ipcRenderer.on('bot:statusChanged', h);
+    return () => ipcRenderer.removeListener('bot:statusChanged', h);
   },
-  onUpdateAvailable: (callback) => {
-    const handler = (_event, data) => callback(data);
-    ipcRenderer.on('update:available', handler);
-    return () => ipcRenderer.removeListener('update:available', handler);
+  onUpdateAvailable: (cb) => {
+    const h = (_, d) => cb(d);
+    ipcRenderer.on('update:available', h);
+    return () => ipcRenderer.removeListener('update:available', h);
   },
-  onUpdateNotAvailable: (callback) => {
-    const handler = () => callback();
-    ipcRenderer.on('update:not-available', handler);
-    return () => ipcRenderer.removeListener('update:not-available', handler);
+  onUpdateNotAvailable: (cb) => {
+    const h = () => cb();
+    ipcRenderer.on('update:not-available', h);
+    return () => ipcRenderer.removeListener('update:not-available', h);
   },
-  onUpdateProgress: (callback) => {
-    const handler = (_event, data) => callback(data);
-    ipcRenderer.on('update:progress', handler);
-    return () => ipcRenderer.removeListener('update:progress', handler);
+  onUpdateProgress: (cb) => {
+    const h = (_, d) => cb(d);
+    ipcRenderer.on('update:progress', h);
+    return () => ipcRenderer.removeListener('update:progress', h);
   },
-  onUpdateDownloaded: (callback) => {
-    const handler = () => callback();
-    ipcRenderer.on('update:downloaded', handler);
-    return () => ipcRenderer.removeListener('update:downloaded', handler);
+  onUpdateDownloaded: (cb) => {
+    const h = () => cb();
+    ipcRenderer.on('update:downloaded', h);
+    return () => ipcRenderer.removeListener('update:downloaded', h);
   },
-  onUpdateError: (callback) => {
-    const handler = (_event, msg) => callback(msg);
-    ipcRenderer.on('update:error', handler);
-    return () => ipcRenderer.removeListener('update:error', handler);
+  onUpdateError: (cb) => {
+    const h = (_, m) => cb(m);
+    ipcRenderer.on('update:error', h);
+    return () => ipcRenderer.removeListener('update:error', h);
   }
 });
