@@ -8,6 +8,7 @@ import Servers from './pages/Servers';
 import Analytics from './pages/Analytics';
 import SettingsPage from './pages/Settings';
 import Logs from './pages/Logs';
+import Console from './pages/Console';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/bots" element={<Bots />} />
+            <Route path="/console" element={<Console />} />
             <Route path="/commands" element={<Commands />} />
             <Route path="/embeds" element={<EmbedBuilder />} />
             <Route path="/servers" element={<Servers />} />
