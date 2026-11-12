@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
+const { autoUpdater } = require('electron-updater');
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 
 // Data store - automatically uses %APPDATA%/botly on Windows
@@ -23,6 +24,10 @@ const store = new Store({
 const activeClients = new Map();
 
 let mainWindow;
+
+// Configure auto-updater
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -52,6 +57,12 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    // Check for updates shortly after launch
+    if (!isDev) {
+      setTimeout(() => {
+        autoUpdater.checkForUpdates().catch(() => {});
+      }, 3000);
+    }
   });
 
   mainWindow.on('closed', () => {
@@ -62,6 +73,44 @@ function createWindow() {
     mainWindow = null;
   });
 }
+
+// Auto-updater events
+autoUpdater.on('update-available', (info) => {
+  if (mainWindow) {
+    mainWindow.webContents.send('update:available', {
+      version: info.version,
+      releaseNotes: info.releaseNotes
+    });
+  }
+});
+
+autoUpdater.on('update-not-available', () => {
+  if (mainWindow) {
+    mainWindow.webContents.send('update:not-available');
+  }
+});
+
+autoUpdater.on('download-progress', (progress) => {
+  if (mainWindow) {
+    mainWindow.webContents.send('update:progress', {
+      percent: progress.percent,
+      transferred: progress.transferred,
+      total: progress.total
+    });
+  }
+});
+
+autoUpdater.on('update-downloaded', () => {
+  if (mainWindow) {
+    mainWindow.webContents.send('update:downloaded');
+  }
+});
+
+autoUpdater.on('error', (err) => {
+  if (mainWindow) {
+    mainWindow.webContents.send('update:error', err.message);
+  }
+});
 
 app.whenReady().then(() => {
   createWindow();
@@ -77,18 +126,13 @@ app.on('window-all-closed', () => {
 
 // ========== IPC Handlers ==========
 
-ipcMain.handle('store:get', (event, key) => {
-  return store.get(key);
-});
-
+ipcMain.handle('store:get', (event, key) => store.get(key));
 ipcMain.handle('store:set', (event, key, value) => {
   store.set(key, value);
   return true;
 });
 
-ipcMain.handle('bots:getAll', () => {
-  return store.get('bots') || [];
-});
+ipcMain.handle('bots:getAll', () => store.get('bots') || []);
 
 ipcMain.handle('bots:add', async (event, botData) => {
   const bots = store.get('bots') || [];
@@ -225,6 +269,31 @@ ipcMain.handle('settings:set', (event, settings) => {
   store.set('settings', settings);
   return true;
 });
+
+// Update handlers
+ipcMain.handle('update:check', async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    return { success: true, version: result?.updateInfo?.version };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('update:download', async () => {
+  try {
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('update:install', () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
+ipcMain.handle('app:getVersion', () => app.getVersion());
 
 function addActivity(message) {
   const activity = store.get('activity') || [];

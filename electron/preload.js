@@ -25,10 +25,41 @@ contextBridge.exposeInMainWorld('botly', {
   getActivity: () => ipcRenderer.invoke('activity:get'),
   getStats: () => ipcRenderer.invoke('stats:get'),
 
+  // Updates
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate: () => ipcRenderer.invoke('update:download'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  getVersion: () => ipcRenderer.invoke('app:getVersion'),
+
   // Events
   onBotStatusChanged: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('bot:statusChanged', handler);
     return () => ipcRenderer.removeListener('bot:statusChanged', handler);
+  },
+  onUpdateAvailable: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('update:available', handler);
+    return () => ipcRenderer.removeListener('update:available', handler);
+  },
+  onUpdateNotAvailable: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('update:not-available', handler);
+    return () => ipcRenderer.removeListener('update:not-available', handler);
+  },
+  onUpdateProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('update:progress', handler);
+    return () => ipcRenderer.removeListener('update:progress', handler);
+  },
+  onUpdateDownloaded: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('update:downloaded', handler);
+    return () => ipcRenderer.removeListener('update:downloaded', handler);
+  },
+  onUpdateError: (callback) => {
+    const handler = (_event, msg) => callback(msg);
+    ipcRenderer.on('update:error', handler);
+    return () => ipcRenderer.removeListener('update:error', handler);
   }
 });
